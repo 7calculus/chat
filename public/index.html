@@ -40,10 +40,11 @@
         
         .chat-header {
             background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: rgb(193, 179, 179);
+            color: rgb(0, 255, 60);
             padding: 20px;
             text-align: center;
             position: relative;
+            flex-shrink: 0;
         }
         
         .chat-header h1 {
@@ -98,6 +99,22 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+        
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .messages-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
         }
         
         .messages {
@@ -177,13 +194,60 @@
             margin-top: 4px;
         }
         
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+            color: #6b7280;
+            padding: 0 20px;
+            flex-shrink: 0;
+            min-height: 30px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(81, 75, 75, 0.95);
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+        
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: #6b7280;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+        
         .input-area {
             padding: 20px;
-            background: #f9fafb;
+            background: linear-gradient(135deg, #ffffff 0%, #000000 100%);
             border-top: 1px solid #e5e7eb;
             display: flex;
             gap: 12px;
             align-items: center;
+            flex-shrink: 0;
         }
         
         .message-input {
@@ -228,45 +292,6 @@
             display: none;
         }
         
-        .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.9rem;
-            color: #6b7280;
-            padding: 0 20px;
-        }
-        
-        .typing-dots {
-            display: flex;
-            gap: 3px;
-        }
-        
-        .typing-dots span {
-            width: 6px;
-            height: 6px;
-            background: #6b7280;
-            border-radius: 50%;
-            animation: typing 1.4s infinite;
-        }
-        
-        .typing-dots span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        
-        .typing-dots span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        
-        @keyframes typing {
-            0%, 60%, 100% {
-                transform: translateY(0);
-            }
-            30% {
-                transform: translateY(-10px);
-            }
-        }
-        
         .connection-indicator {
             position: absolute;
             top: 10px;
@@ -302,7 +327,9 @@
         </div>
         
         <div class="chat-area hidden" id="chatArea">
-            <div class="messages" id="messages"></div>
+            <div class="messages-container">
+                <div class="messages" id="messages"></div>
+            </div>
             <div class="typing-indicator hidden" id="typingIndicator">
                 <span id="typingUser">Someone</span> <span>is typing</span>
                 <div class="typing-dots">
