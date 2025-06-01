@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-time Chat App</title>
+    <title>Chat App</title>
     <style>
         * {
             margin: 0;
@@ -14,20 +14,16 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px 0;
-            overflow-y: auto;
         }
         
         .chat-container {
             width: 90%;
             max-width: 500px;
             height: 90vh;
-            max-height: 700px;
-            min-height: 400px;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -35,7 +31,6 @@
             flex-direction: column;
             overflow: hidden;
             backdrop-filter: blur(10px);
-            position: relative;
         }
         
         .chat-header {
@@ -103,31 +98,12 @@
         .messages {
             flex: 1;
             padding: 20px;
-            overflow-y: auto;
-            overflow-x: hidden;
+            overflow-y: scroll;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .messages::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .messages::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
-        }
-        
-        .messages::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 3px;
-        }
-        
-        .messages::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
+            max-height: calc(90vh - 200px);
+            min-height: 200px;
         }
         
         .message {
@@ -161,14 +137,6 @@
             background: #f3f4f6;
             color: #374151;
             border-bottom-left-radius: 6px;
-        }
-        
-        .message.system {
-            align-self: center;
-            background: #e0e7ff;
-            color: #3730a3;
-            font-size: 0.9rem;
-            font-style: italic;
         }
         
         .message-time {
@@ -266,45 +234,29 @@
                 transform: translateY(-10px);
             }
         }
-        
-        .connection-indicator {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #ef4444;
-            transition: background-color 0.3s ease;
-        }
-        
-        .connection-indicator.connected {
-            background: #22c55e;
-        }
     </style>
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <div class="connection-indicator" id="connectionIndicator"></div>
-            <h1>💬 Real-time Chat</h1>
+            <h1>💬 Chat App</h1>
             <div class="status" id="status">Not connected</div>
         </div>
         
         <div class="connection-setup" id="connectionSetup">
-            <h2 style="margin-bottom: 20px; color: #374151;">Join Chat Room</h2>
+            <h2 style="margin-bottom: 20px; color: #374151;">Connect to Chat</h2>
             <input type="text" id="usernameInput" placeholder="Enter your username" maxlength="20">
             <input type="text" id="roomInput" placeholder="Enter room ID (share with friend)" maxlength="50">
-            <button onclick="connectToChat()">Connect to Chat</button>
+            <button onclick="connectToChat()">Start Chatting</button>
             <p style="margin-top: 15px; font-size: 0.9rem; color: #6b7280;">
-                Share the same room ID with your friend to chat together in real-time!
+                Share the same room ID with your friend to chat together!
             </p>
         </div>
         
         <div class="chat-area hidden" id="chatArea">
             <div class="messages" id="messages"></div>
             <div class="typing-indicator hidden" id="typingIndicator">
-                <span id="typingUser">Someone</span> <span>is typing</span>
+                <span>Friend is typing</span>
                 <div class="typing-dots">
                     <span></span>
                     <span></span>
@@ -322,17 +274,21 @@
         </div>
     </div>
 
-    <!-- Socket.io client library -->
-    <script src="/socket.io/socket.io.js"></script>
     <script>
-        let socket = null;
+        let ws = null;
         let username = '';
         let roomId = '';
         let isTyping = false;
         let typingTimeout = null;
-        let typingUsers = new Set(); // Track who is typing
         
-        // Initialize connection
+        // Simple WebSocket server simulation using WebRTC for peer-to-peer
+        // In production, you'd use a real WebSocket server
+        let isHost = false;
+        let peer = null;
+        let dataChannel = null;
+        let messages = [];
+        
+        // Demo connection (in real app, use WebSocket server)
         function connectToChat() {
             const usernameInput = document.getElementById('usernameInput');
             const roomInput = document.getElementById('roomInput');
@@ -345,201 +301,134 @@
                 return;
             }
             
-            // Connect to Socket.io server
-            socket = io();
-            
-            // Set up socket event listeners
-            setupSocketListeners();
-            
-            // Join the room
-            socket.emit('join-room', { username, roomId });
+            // For demo purposes, simulate connection
+            // In a real app, you'd connect to a WebSocket server
+            simulateConnection();
         }
         
-        function setupSocketListeners() {
-            // Connection successful
-            socket.on('connected', (data) => {
-                document.getElementById('connectionSetup').classList.add('hidden');
-                document.getElementById('chatArea').classList.remove('hidden');
-                document.getElementById('status').textContent = `Connected as ${username}`;
-                document.getElementById('connectionIndicator').classList.add('connected');
-                
-                addMessage('system', data.message);
-                setupMessageInput();
-            });
+        function simulateConnection() {
+            document.getElementById('connectionSetup').classList.add('hidden');
+            document.getElementById('chatArea').classList.remove('hidden');
+            document.getElementById('status').textContent = `Connected as ${username}`;
             
-            // Receive messages
-            socket.on('receive-message', (data) => {
-                const messageType = data.username === username ? 'sent' : 'received';
-                addMessage(messageType, data.message, data.username, data.timestamp);
-            });
+            // Add welcome message
+            addMessage('system', 'Connected! Share your room ID with a friend to start chatting.', true);
             
-            // User joined notification
-            socket.on('user-joined', (data) => {
-                addMessage('system', data.message);
-            });
-            
-            // User left notification
-            socket.on('user-left', (data) => {
-                addMessage('system', data.message);
-            });
-            
-            // Typing indicators
-            socket.on('user-typing', (data) => {
-                if (data.username === username) return; // Don't show our own typing
-                
-                if (data.isTyping) {
-                    typingUsers.add(data.username);
-                } else {
-                    typingUsers.delete(data.username);
-                }
-                
-                updateTypingIndicator();
-            });
-            
-            // Connection status
-            socket.on('connect', () => {
-                document.getElementById('connectionIndicator').classList.add('connected');
-                if (username) {
-                    document.getElementById('status').textContent = `Connected as ${username}`;
-                }
-            });
-            
-            socket.on('disconnect', () => {
-                document.getElementById('connectionIndicator').classList.remove('connected');
-                document.getElementById('status').textContent = 'Disconnected - Reconnecting...';
-            });
-            
-            socket.on('connect_error', (error) => {
-                console.error('Connection error:', error);
-                document.getElementById('status').textContent = 'Connection failed';
-            });
-        }
-        
-        function setupMessageInput() {
+            // Set up message input
             const messageInput = document.getElementById('messageInput');
-            
             messageInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     sendMessage();
                 }
             });
             
-            // Typing indicators - only send when actually typing
-            let lastTypingTime = 0;
+            // Simulate typing indicator
             messageInput.addEventListener('input', () => {
-                const now = Date.now();
-                lastTypingTime = now;
-                
                 if (!isTyping) {
                     isTyping = true;
-                    socket.emit('typing-start');
+                    // In real app, send typing status to other users
                 }
                 
-                // Stop typing after 1 second of no input
                 clearTimeout(typingTimeout);
                 typingTimeout = setTimeout(() => {
-                    if (Date.now() - lastTypingTime >= 1000) {
-                        isTyping = false;
-                        socket.emit('typing-stop');
-                    }
+                    isTyping = false;
+                    // In real app, stop typing status
                 }, 1000);
             });
             
-            // Also stop typing when user stops typing (no input for a while)
-            messageInput.addEventListener('keyup', () => {
-                clearTimeout(typingTimeout);
-                typingTimeout = setTimeout(() => {
-                    if (isTyping) {
-                        isTyping = false;
-                        socket.emit('typing-stop');
-                    }
-                }, 1000);
-            });
-            
-            messageInput.focus();
+            // For demo, simulate receiving messages from localStorage
+            startListeningForMessages();
+        }
+        
+        function startListeningForMessages() {
+            // This function is ready for WebSocket integration
+            // When you connect to a real server, socket events will handle message receiving
         }
         
         function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const text = messageInput.value.trim();
             
-            if (!text || !socket) return;
+            if (!text) return;
             
-            // Send message to server
-            socket.emit('send-message', { message: text });
+            // Add to local messages
+            const message = {
+                id: Date.now() + Math.random(),
+                username: username,
+                text: text,
+                timestamp: new Date().toISOString()
+            };
+            
+            addMessage('sent', text, false);
+            messages.push(message);
+            
+            // In a real app, you'd send this via WebSocket to server
+            // The server would then broadcast to other users in the room
             
             messageInput.value = '';
             
-            // Stop typing indicator
-            if (isTyping) {
-                isTyping = false;
-                socket.emit('typing-stop');
-            }
+            // Simulate message delivery confirmation
+            setTimeout(() => {
+                // In real app, server would confirm message delivery
+            }, 500);
         }
         
-        function addMessage(type, text, senderName = '', timestamp = '') {
+        function addMessage(type, text, isSystem = false, senderName = '') {
             const messagesContainer = document.getElementById('messages');
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
             
-            const time = timestamp ? 
-                new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) :
-                new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            if (isSystem) {
+                messageDiv.className = 'message system';
+                messageDiv.style.alignSelf = 'center';
+                messageDiv.style.background = '#e0e7ff';
+                messageDiv.style.color = '#3730a3';
+                messageDiv.style.fontSize = '0.9rem';
+                messageDiv.style.fontStyle = 'italic';
+            } else {
+                messageDiv.className = `message ${type}`;
+            }
             
-            const displayName = type === 'received' && senderName && senderName !== username ? senderName : '';
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const displayName = type === 'received' && senderName ? senderName : '';
             
             messageDiv.innerHTML = `
                 ${displayName ? `<div style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 2px;">${displayName}</div>` : ''}
                 <div>${text}</div>
-                ${type !== 'system' ? `<div class="message-time">${time}</div>` : ''}
+                ${!isSystem ? `<div class="message-time">${time}</div>` : ''}
             `;
             
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
         
-        function updateTypingIndicator() {
-            const indicator = document.getElementById('typingIndicator');
-            const userSpan = document.getElementById('typingUser');
-            
-            if (typingUsers.size === 0) {
-                indicator.classList.add('hidden');
-            } else {
-                const typingArray = Array.from(typingUsers);
-                let displayText = '';
-                
-                if (typingArray.length === 1) {
-                    displayText = `${typingArray[0]} is typing`;
-                } else if (typingArray.length === 2) {
-                    displayText = `${typingArray[0]} and ${typingArray[1]} are typing`;
-                } else {
-                    displayText = `${typingArray.length} people are typing`;
-                }
-                
-                userSpan.textContent = displayText.replace(' is typing', '').replace(' are typing', '');
-                indicator.querySelector('span').textContent = displayText.includes('are typing') ? 'are typing' : 'is typing';
-                indicator.classList.remove('hidden');
-                
-                const messagesContainer = document.getElementById('messages');
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Demo: Simulate friend typing (for demonstration)
+        let demoTypingInterval;
+        setTimeout(() => {
+            if (messages.length === 0) {
+                // Show typing indicator occasionally for demo
+                demoTypingInterval = setInterval(() => {
+                    if (Math.random() > 0.8) {
+                        showTypingIndicator();
+                        setTimeout(hideTypingIndicator, 2000);
+                    }
+                }, 10000);
             }
-        }
+        }, 5000);
         
-        function showTypingIndicator(typingUsername) {
-            // This function is now replaced by updateTypingIndicator
-            // Kept for compatibility but not used
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').classList.remove('hidden');
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
         
         function hideTypingIndicator() {
-            // This function is now replaced by updateTypingIndicator  
-            // Kept for compatibility but not used
+            document.getElementById('typingIndicator').classList.add('hidden');
         }
         
         // Clean up on page unload
         window.addEventListener('beforeunload', () => {
-            if (socket) {
-                socket.disconnect();
-            }
+            // In real app, you'd properly disconnect from WebSocket server
+            // and clean up any active connections
         });
     </script>
 </body>
