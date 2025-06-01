@@ -537,15 +537,13 @@
                 let displayText = '';
                 
                 if (typingArray.length === 1) {
-                    displayText = `${typingArray[0]} is typing`;
+                    displayText = `${typingArray[0]}`;
                 } else if (typingArray.length === 2) {
                     displayText = `${typingArray[0]} and ${typingArray[1]} are typing`;
                 } else {
                     displayText = `${typingArray.length} people are typing`;
                 }
-                
-                userSpan.textContent = displayText.replace(' is typing', '').replace(' are typing', '');
-                indicator.querySelector('span').textContent = displayText.includes('are typing') ? 'are typing' : 'is typing';
+                userSpan.textContent = displayText;
                 indicator.classList.remove('hidden');
                 
                 const messagesContainer = document.getElementById('messages');
