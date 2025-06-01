@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel = "shortcut icon" href = "7calculus.jpg" \>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>oota aita?</title>
     <style>
         * {
@@ -21,6 +21,9 @@
             align-items: center;
             padding: 20px 0;
             overflow-y: auto;
+
+            min-height: 100dvh; /* or use 100% */
+            height: 100dvh; /* Add this */
         }
         
         .chat-container {
@@ -37,6 +40,9 @@
             overflow: hidden;
             backdrop-filter: blur(10px);
             position: relative;
+
+            height: 90dvh;
+            max-height: 90dvh;
         }
         
         .chat-header {
