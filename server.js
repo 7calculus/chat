@@ -13,7 +13,7 @@ const io = socketIo(server, {
   }
 });
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -23,6 +23,7 @@ app.use(express.static('public')); // Serve static files
 // Store active rooms and users
 const rooms = new Map();
 const users = new Map();
+const typingUsers = new Map(); // Track typing status per room
 
 // Serve the chat app
 app.get('/', (req, res) => {
@@ -105,6 +106,15 @@ io.on('connection', (socket) => {
     const user = users.get(socket.id);
     if (!user) return;
     
+    // Initialize typing tracking for room if needed
+    if (!typingUsers.has(user.roomId)) {
+      typingUsers.set(user.roomId, new Set());
+    }
+    
+    // Add user to typing list
+    typingUsers.get(user.roomId).add(user.username);
+    
+    // Notify others in room
     socket.to(user.roomId).emit('user-typing', {
       username: user.username,
       isTyping: true
@@ -115,6 +125,17 @@ io.on('connection', (socket) => {
     const user = users.get(socket.id);
     if (!user) return;
     
+    // Remove user from typing list
+    if (typingUsers.has(user.roomId)) {
+      typingUsers.get(user.roomId).delete(user.username);
+      
+      // Clean up empty typing sets
+      if (typingUsers.get(user.roomId).size === 0) {
+        typingUsers.delete(user.roomId);
+      }
+    }
+    
+    // Notify others in room
     socket.to(user.roomId).emit('user-typing', {
       username: user.username,
       isTyping: false
@@ -126,6 +147,20 @@ io.on('connection', (socket) => {
     const user = users.get(socket.id);
     if (user) {
       console.log(`${user.username} disconnected from room: ${user.roomId}`);
+      
+      // Remove from typing indicators
+      if (typingUsers.has(user.roomId)) {
+        typingUsers.get(user.roomId).delete(user.username);
+        if (typingUsers.get(user.roomId).size === 0) {
+          typingUsers.delete(user.roomId);
+        }
+        
+        // Notify others that user stopped typing
+        socket.to(user.roomId).emit('user-typing', {
+          username: user.username,
+          isTyping: false
+        });
+      }
       
       // Remove user from room
       if (rooms.has(user.roomId)) {
